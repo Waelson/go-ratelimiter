@@ -1,1 +1,1 @@
-# go-ratelimiter
+# go-ratelimit
