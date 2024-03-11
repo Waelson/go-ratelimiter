@@ -4,3 +4,10 @@ services:
     image: "redis:alpine"
     ports:
       - "6379:6379"
+  app:
+    build:
+      context: .
+    expose:
+      - "8080:8080"
+    depends_on:
+      - redis

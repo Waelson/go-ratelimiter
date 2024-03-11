@@ -10,7 +10,11 @@ import (
 )
 
 func main() {
-	configuration := config.LoadConfig()
+	envLoader := config.GodotenvLoader{}
+	configuration, err := config.LoadConfig(&envLoader)
+	if err != nil {
+		panic(err)
+	}
 
 	redisClient := redis.NewClient(&redis.Options{
 		Addr:     configuration.RedisAddress,
@@ -19,7 +23,7 @@ func main() {
 	})
 
 	limiter := limiter2.NewLimiter(redisClient)
-	limiterMiddleware := middleware.NewRateLimiterMiddleware(limiter, &configuration)
+	limiterMiddleware := middleware.NewRateLimiterMiddleware(limiter, configuration)
 
 	http.Handle("/", limiterMiddleware(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusOK)

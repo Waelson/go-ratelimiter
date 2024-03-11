@@ -4,29 +4,30 @@ import (
 	"context"
 	"fmt"
 	"github.com/Waelson/go-ratelimit/internal/config"
+	"github.com/Waelson/go-ratelimit/internal/storage"
 	"github.com/go-redis/redis/v8"
 	"strconv"
 	"time"
 )
 
 type Limiter struct {
-	redisClient *redis.Client
-	Config      *config.Configuration
+	storage storage.StorageInterface
+	Config  *config.Configuration
 }
 
-func NewLimiter(r *redis.Client) *Limiter {
+func NewLimiter(r storage.StorageInterface) *Limiter {
 	return &Limiter{
-		redisClient: r,
+		storage: r,
 	}
 }
 
 func (l *Limiter) Allow(key string, limit int, blockTime int) bool {
 	ctx := context.Background()
-	val, err := l.redisClient.Get(ctx, key).Result()
+	val, err := l.storage.Get(ctx, key).Result()
 
 	if err == redis.Nil {
-		// Chave não existe, então pode prosseguir e criar a chave com limite de 1
-		err := l.redisClient.Set(ctx, key, 0, time.Second).Err()
+		// Chave não existe, então pode prosseguir e criar a chave com limite de 0
+		err := l.storage.Set(ctx, key, 1, time.Second).Err()
 		if err != nil {
 			fmt.Println("Redis set error:", err)
 			return false
@@ -50,10 +51,10 @@ func (l *Limiter) Allow(key string, limit int, blockTime int) bool {
 		return false
 	}
 
-	if count >= limit {
+	if count > limit {
 		// Transforma o block time em time.Duration
 		duration := time.Duration(blockTime) * time.Second
-		err := l.redisClient.Set(ctx, key, -1, duration).Err()
+		err := l.storage.Set(ctx, key, -1, duration).Err()
 		if err != nil {
 			fmt.Println("Error setting reached limit", err)
 		}
@@ -62,7 +63,7 @@ func (l *Limiter) Allow(key string, limit int, blockTime int) bool {
 	}
 
 	// Incrementa a contagem, já que o limite não foi atingido
-	err = l.redisClient.Incr(ctx, key).Err()
+	err = l.storage.Incr(ctx, key).Err()
 	if err != nil {
 		fmt.Println("Redis increment error:", err)
 		return false
