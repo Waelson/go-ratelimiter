@@ -1,6 +1,7 @@
 package middleware
 
 import (
+	"fmt"
 	"github.com/Waelson/go-ratelimit/internal/config"
 	"github.com/Waelson/go-ratelimit/internal/limiter"
 	"net"
@@ -15,7 +16,7 @@ func NewRateLimiterMiddleware(l limiter.LimiterInterface, config *config.Configu
 			limit := config.TokenRateLimit
 			blockDuration := config.TokenBlockDuration
 			key := r.Header.Get("API_KEY")
-
+			fmt.Println("API_KEY: ", key)
 			if key == "" {
 				key = ExtractIP(r.RemoteAddr)
 				limit = config.IPRateLimit

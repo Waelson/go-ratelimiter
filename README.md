@@ -28,7 +28,16 @@ Detalhes do arquivo de configuração
 docker-compose up --build
 ```
 
-### Endereço
+### Fazendo Request
+Usando o endereço IP no browser
 ```
 http://localhost:8080
+```
+Usando o endereço IP com cURL
+```
+curl --location http://localhost:8080
+```
+Usando API_KEY
+```
+curl --location 'http://localhost:8080/' --header 'API_KEY: 111'
 ```
